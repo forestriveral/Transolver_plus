@@ -1,0 +1,17 @@
+
+Device: NVIDIA GeForce RTX 5080  |  points/sample: 331971
+Timed 10 train iters (1 warmup discarded), 5 val iters
+
+phase       mean (s)       std   % of train-iter
+data          0.0085    0.0011              1.4%
+h2d           0.0022    0.0005              0.4%
+fwd           0.1781    0.0132             29.2%
+bwd           0.4200    0.0362             68.8%
+opt           0.0015    0.0003              0.2%
+TOTAL         0.6104                      100.0%
+
+val-iter mean: 0.1755s (std 0.0017)
+per-sample tensor payload (x+y): 17.3 MB
+
+Estimated steady-state epoch: 120 train x 0.61s + 15 val x 0.18s = 75.9s (1.3 min)
+Data-loading share of a train iter: 1.4%  (compute-bound)

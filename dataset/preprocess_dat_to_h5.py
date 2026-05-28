@@ -22,8 +22,8 @@ To migrate to a NEW dataset: drop the raw folders + a result.csv with columns
 [idx, Ma, alpha, beta, ...] under --raw_dir and rerun.
 
 Usage:
-    # convert all samples listed in result.csv and write a train/test split json
-    python dataset/preprocess_dat_to_h5.py --write_split --test_ids 91 92 93
+    # convert all samples listed in result.csv and write a train/val/test split json
+    python dataset/preprocess_dat_to_h5.py --write_split --val_ids 81 82 83 --test_ids 91 92 93
 
     # convert only a subset of aircraft ids
     python dataset/preprocess_dat_to_h5.py --ids 1 2 3 91
@@ -115,7 +115,9 @@ def main():
     ap.add_argument("--ids", type=int, nargs="*", default=None,
                     help="only convert these aircraft ids (default: all in csv)")
     ap.add_argument("--write_split", action="store_true",
-                    help="also write airplane_dataset.json train/test split")
+                    help="also write airplane_dataset.json train/val/test split")
+    ap.add_argument("--val_ids", type=int, nargs="*", default=[81, 82, 83],
+                    help="aircraft ids assigned to the validation split")
     ap.add_argument("--test_ids", type=int, nargs="*", default=[91, 92, 93],
                     help="aircraft ids assigned to the test split")
     ap.add_argument("--split_json", default="airplane_dataset.json")
@@ -125,7 +127,7 @@ def main():
     df = pd.read_csv(csv_path)
     os.makedirs(args.out_dir, exist_ok=True)
 
-    train_names, test_names = [], []
+    train_names, val_names, test_names = [], [], []
     for _, row in df.iterrows():
         sid = int(row["idx"])
         ma, alpha, beta = row["Ma"], row["alpha"], row["beta"]
@@ -139,13 +141,19 @@ def main():
             continue
         n = convert_one(dat_path, out_path, ma, alpha, beta)
         print(f"OK    {name}: {n} nodes -> {out_path}")
-        (test_names if sid in args.test_ids else train_names).append(name)
+        if sid in args.test_ids:
+            test_names.append(name)
+        elif sid in args.val_ids:
+            val_names.append(name)
+        else:
+            train_names.append(name)
 
     if args.write_split:
-        split = {"train_set": train_names, "test_set": test_names}
+        split = {"train_set": train_names, "val_set": val_names, "test_set": test_names}
         with open(args.split_json, "w") as f:
             json.dump(split, f, indent=4)
-        print(f"split -> {args.split_json}: {len(train_names)} train / {len(test_names)} test")
+        print(f"split -> {args.split_json}: {len(train_names)} train / "
+              f"{len(val_names)} val / {len(test_names)} test")
 
 
 if __name__ == "__main__":

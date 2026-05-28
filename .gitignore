@@ -27,3 +27,9 @@ checkpoints/
 # IDE
 .vscode/
 .idea/
+
+# demo run (committed as a showcase deliverable, weights included)
+!demo/
+!demo/**
+# but not the raw captured stdout (redundant with train.log/test.log)
+demo/run_*.out

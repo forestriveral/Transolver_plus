@@ -54,8 +54,12 @@ def load_or_compute_norm_stats(save_dir, f_list, recompute=False):
 
 
 class AirplaneDataset(torch.utils.data.Dataset):
-    def __init__(self, path, train=True, train_set=None, split_size=600000):
+    def __init__(self, path, train=True, split=None, train_set=None, split_size=600000):
         self.split_size = split_size
+        # `split` ('train'|'val'|'test') selects the manifest key; when omitted we fall
+        # back to the legacy `train` bool ('train' / 'test') for backward compatibility.
+        if split is None:
+            split = 'train' if train else 'test'
         # Resolve the split manifest: prefer one inside `path`, else the repo-root copy,
         # else an explicit override via the AIRPLANE_JSON env var.
         repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -70,10 +74,15 @@ class AirplaneDataset(torch.utils.data.Dataset):
                 f"airplane_dataset.json not found in {path!r}, repo root, or AIRPLANE_JSON")
         with open(filename, 'r') as f:
             data = json.load(f)
-        if train:
-            self.train_set = data['train_set']
-        else:
+        key = f'{split}_set'
+        if key in data:
+            self.train_set = data[key]
+        elif split == 'val' and 'test_set' in data:
+            # legacy 2-way split has no val_set: reuse the test split for validation.
+            print("WARNING: no 'val_set' in split manifest; falling back to 'test_set' for validation")
             self.train_set = data['test_set']
+        else:
+            raise KeyError(f"split key {key!r} not found in {filename}")
         if train_set is not None:
             self.train_set = train_set
 

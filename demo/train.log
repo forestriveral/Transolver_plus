@@ -1,0 +1,131 @@
+2026-05-28 15:01:45,214 - Namespace(data_dir='dataset/aircraft_dataset/', save_dir='dataset/aircraft_dataset/', fold_id=0, gpu=0, val_iter=1, cfd_config_dir='cfd/cfd_params.yaml', cfd_model='transolver_plus', cfd_mesh=False, r=0.2, weight=0.5, lr=0.001, batch_size=1, nb_epochs=50, preprocessed=1, finetune=0, pos_norm=1, out_norm=1, dataset='airplane', eval=False, local_rank=0, out_dim=4, out_path='demo')
+2026-05-28 15:01:45,214 - Number of parameters: 1741738
+2026-05-28 15:01:45,215 - Model(
+  (preprocess): MLP(
+    (linear_pre): Sequential(
+      (0): Linear(in_features=7, out_features=512, bias=True)
+      (1): GELU(approximate='none')
+    )
+    (linear_post): Linear(in_features=512, out_features=256, bias=True)
+    (linears): ModuleList()
+  )
+  (embedding): Linear(in_features=3, out_features=256, bias=True)
+  (blocks): ModuleList(
+    (0-2): 3 x Transolver_plus_block(
+      (ln_1): LayerNorm((256,), eps=1e-05, elementwise_affine=True, bias=True)
+      (Attn): Physics_Attention_1D_Eidetic(
+        (softmax): Softmax(dim=-1)
+        (dropout): Dropout(p=0.1, inplace=False)
+        (proj_temperature): Sequential(
+          (0): Linear(in_features=32, out_features=32, bias=True)
+          (1): GELU(approximate='none')
+          (2): Linear(in_features=32, out_features=1, bias=True)
+          (3): GELU(approximate='none')
+        )
+        (in_project_x): Linear(in_features=256, out_features=256, bias=True)
+        (in_project_slice): Linear(in_features=32, out_features=32, bias=True)
+        (to_q): Linear(in_features=32, out_features=32, bias=False)
+        (to_k): Linear(in_features=32, out_features=32, bias=False)
+        (to_v): Linear(in_features=32, out_features=32, bias=False)
+        (to_out): Sequential(
+          (0): Linear(in_features=256, out_features=256, bias=True)
+          (1): Dropout(p=0.1, inplace=False)
+        )
+      )
+      (ln_2): LayerNorm((256,), eps=1e-05, elementwise_affine=True, bias=True)
+      (mlp): MLP(
+        (linear_pre): Sequential(
+          (0): Linear(in_features=256, out_features=512, bias=True)
+          (1): GELU(approximate='none')
+        )
+        (linear_post): Linear(in_features=512, out_features=256, bias=True)
+        (linears): ModuleList()
+      )
+    )
+    (3): Transolver_plus_block(
+      (ln_1): LayerNorm((256,), eps=1e-05, elementwise_affine=True, bias=True)
+      (Attn): Physics_Attention_1D_Eidetic(
+        (softmax): Softmax(dim=-1)
+        (dropout): Dropout(p=0.1, inplace=False)
+        (proj_temperature): Sequential(
+          (0): Linear(in_features=32, out_features=32, bias=True)
+          (1): GELU(approximate='none')
+          (2): Linear(in_features=32, out_features=1, bias=True)
+          (3): GELU(approximate='none')
+        )
+        (in_project_x): Linear(in_features=256, out_features=256, bias=True)
+        (in_project_slice): Linear(in_features=32, out_features=32, bias=True)
+        (to_q): Linear(in_features=32, out_features=32, bias=False)
+        (to_k): Linear(in_features=32, out_features=32, bias=False)
+        (to_v): Linear(in_features=32, out_features=32, bias=False)
+        (to_out): Sequential(
+          (0): Linear(in_features=256, out_features=256, bias=True)
+          (1): Dropout(p=0.1, inplace=False)
+        )
+      )
+      (ln_2): LayerNorm((256,), eps=1e-05, elementwise_affine=True, bias=True)
+      (mlp): MLP(
+        (linear_pre): Sequential(
+          (0): Linear(in_features=256, out_features=512, bias=True)
+          (1): GELU(approximate='none')
+        )
+        (linear_post): Linear(in_features=512, out_features=256, bias=True)
+        (linears): ModuleList()
+      )
+      (ln_3): LayerNorm((256,), eps=1e-05, elementwise_affine=True, bias=True)
+      (mlp2): Linear(in_features=256, out_features=6, bias=True)
+    )
+  )
+)
+2026-05-28 15:05:48,473 - Epoch 0, train_loss: 0.7545651042213043, val_loss_mse: 0.6420535266399383, val_loss_l2re: 0.6457201937834421
+2026-05-28 15:08:13,240 - Epoch 1, train_loss: 0.5705314207822084, val_loss_mse: 0.48080955545107523, val_loss_l2re: 0.6432692289352417
+2026-05-28 15:10:50,502 - Epoch 2, train_loss: 0.518945045148333, val_loss_mse: 0.49938936332861583, val_loss_l2re: 0.6656299690405528
+2026-05-28 15:13:56,937 - Epoch 3, train_loss: 0.363400023120145, val_loss_mse: 0.29987491766611735, val_loss_l2re: 0.534058541059494
+2026-05-28 15:18:04,687 - Epoch 4, train_loss: 0.3130208483586709, val_loss_mse: 0.22736983001232147, val_loss_l2re: 0.49897659023602803
+2026-05-28 15:22:11,963 - Epoch 5, train_loss: 0.24829255354901156, val_loss_mse: 0.18116487314303717, val_loss_l2re: 0.4777168532212575
+2026-05-28 15:25:57,133 - Epoch 6, train_loss: 0.17315820219616096, val_loss_mse: 0.1940333753824234, val_loss_l2re: 0.4829580545425415
+2026-05-28 15:29:05,835 - Epoch 7, train_loss: 0.20604934636503458, val_loss_mse: 0.18483275920152664, val_loss_l2re: 0.45717355807622273
+2026-05-28 15:31:59,761 - Epoch 8, train_loss: 0.15806350105752548, val_loss_mse: 0.15470464477936427, val_loss_l2re: 0.5418468077977499
+2026-05-28 15:34:40,341 - Epoch 9, train_loss: 0.17406983757391573, val_loss_mse: 0.17322453260421752, val_loss_l2re: 0.4078281303246816
+2026-05-28 15:38:15,123 - Epoch 10, train_loss: 0.13273776362960538, val_loss_mse: 0.12403668090701103, val_loss_l2re: 0.5599145213762919
+2026-05-28 15:42:25,230 - Epoch 11, train_loss: 0.13275572834536434, val_loss_mse: 0.14607319235801697, val_loss_l2re: 0.31550435423851014
+2026-05-28 15:46:31,637 - Epoch 12, train_loss: 0.11251913507779439, val_loss_mse: 0.12871693472067516, val_loss_l2re: 0.36114438672860466
+2026-05-28 15:50:33,163 - Epoch 13, train_loss: 0.11913885738079746, val_loss_mse: 0.09721074129144351, val_loss_l2re: 0.29643685519695284
+2026-05-28 15:55:00,055 - Epoch 14, train_loss: 0.10065836211045583, val_loss_mse: 0.08556170662244161, val_loss_l2re: 0.21578259070714315
+2026-05-28 16:03:58,390 - Epoch 15, train_loss: 0.10572949362297852, val_loss_mse: 0.11827558676401774, val_loss_l2re: 0.22379867335160572
+2026-05-28 16:06:48,785 - Epoch 16, train_loss: 0.09111933869620165, val_loss_mse: 0.076827655484279, val_loss_l2re: 0.36697076360384623
+2026-05-28 16:08:45,742 - Epoch 17, train_loss: 0.07279350518559416, val_loss_mse: 0.06340708335240682, val_loss_l2re: 0.3007092624902725
+2026-05-28 16:10:44,863 - Epoch 18, train_loss: 0.06912592245886723, val_loss_mse: 0.06875856841603915, val_loss_l2re: 0.23064566552639007
+2026-05-28 16:12:49,438 - Epoch 19, train_loss: 0.06659997493649522, val_loss_mse: 0.06581132685144743, val_loss_l2re: 0.18498235940933228
+2026-05-28 16:17:35,394 - Epoch 20, train_loss: 0.07200580399173001, val_loss_mse: 0.060994768887758254, val_loss_l2re: 0.2179632196823756
+2026-05-28 16:27:32,486 - Epoch 21, train_loss: 0.06595787073795994, val_loss_mse: 0.06382607022921244, val_loss_l2re: 0.20276281833648682
+2026-05-28 16:54:25,573 - Epoch 22, train_loss: 0.0650604567800959, val_loss_mse: 0.05070451920231183, val_loss_l2re: 0.23423498372236887
+2026-05-28 16:57:19,867 - Epoch 23, train_loss: 0.05293686163301269, val_loss_mse: 0.04644479975104332, val_loss_l2re: 0.18578431010246277
+2026-05-28 16:59:17,650 - Epoch 24, train_loss: 0.05218966449610889, val_loss_mse: 0.0441051721572876, val_loss_l2re: 0.15407213767369587
+2026-05-28 17:01:06,960 - Epoch 25, train_loss: 0.045921963173896074, val_loss_mse: 0.0452874731272459, val_loss_l2re: 0.1326806738972664
+2026-05-28 17:02:23,864 - Epoch 26, train_loss: 0.0468575161571304, val_loss_mse: 0.04209954130152861, val_loss_l2re: 0.1802987406651179
+2026-05-28 17:03:40,632 - Epoch 27, train_loss: 0.04669459134650727, val_loss_mse: 0.0443384995063146, val_loss_l2re: 0.15327113370100656
+2026-05-28 17:04:57,640 - Epoch 28, train_loss: 0.04733766104715566, val_loss_mse: 0.04331293019155661, val_loss_l2re: 0.1405442108710607
+2026-05-28 17:06:14,250 - Epoch 29, train_loss: 0.043140245430792375, val_loss_mse: 0.03597860708832741, val_loss_l2re: 0.14823174178600312
+2026-05-28 17:07:31,393 - Epoch 30, train_loss: 0.036357522724817196, val_loss_mse: 0.030226524795095126, val_loss_l2re: 0.1309620385368665
+2026-05-28 17:08:50,534 - Epoch 31, train_loss: 0.03635750378792484, val_loss_mse: 0.03236596745749314, val_loss_l2re: 0.14516014953454334
+2026-05-28 17:10:07,678 - Epoch 32, train_loss: 0.033894582434246937, val_loss_mse: 0.03212257511913776, val_loss_l2re: 0.12447774012883504
+2026-05-28 17:11:24,413 - Epoch 33, train_loss: 0.03139186898867289, val_loss_mse: 0.030876324325799943, val_loss_l2re: 0.11487314105033875
+2026-05-28 17:12:41,191 - Epoch 34, train_loss: 0.03069836812404295, val_loss_mse: 0.028015115484595298, val_loss_l2re: 0.11619602789481481
+2026-05-28 17:13:57,604 - Epoch 35, train_loss: 0.029984284626940885, val_loss_mse: 0.02801415187617143, val_loss_l2re: 0.11498281409343084
+2026-05-28 17:15:14,103 - Epoch 36, train_loss: 0.028666928752015035, val_loss_mse: 0.028406887501478194, val_loss_l2re: 0.11720273047685623
+2026-05-28 17:16:30,530 - Epoch 37, train_loss: 0.02861600584195306, val_loss_mse: 0.027587979038556417, val_loss_l2re: 0.11088849802811941
+2026-05-28 17:17:47,141 - Epoch 38, train_loss: 0.0260548812802881, val_loss_mse: 0.026811222545802593, val_loss_l2re: 0.11351880331834158
+2026-05-28 17:19:04,007 - Epoch 39, train_loss: 0.025377189003241558, val_loss_mse: 0.027056649823983512, val_loss_l2re: 0.11017502645651499
+2026-05-28 17:20:20,373 - Epoch 40, train_loss: 0.024464713828638195, val_loss_mse: 0.02594254488746325, val_loss_l2re: 0.10686888496081035
+2026-05-28 17:21:36,786 - Epoch 41, train_loss: 0.023799053913292786, val_loss_mse: 0.02543564389149348, val_loss_l2re: 0.10813652674357097
+2026-05-28 17:22:53,514 - Epoch 42, train_loss: 0.023390193617281816, val_loss_mse: 0.024456660573681194, val_loss_l2re: 0.10460610886414846
+2026-05-28 17:24:10,173 - Epoch 43, train_loss: 0.02291801878406356, val_loss_mse: 0.02411513514816761, val_loss_l2re: 0.1042621061205864
+2026-05-28 17:25:27,124 - Epoch 44, train_loss: 0.02259433171711862, val_loss_mse: 0.023877917416393758, val_loss_l2re: 0.10139264563719431
+2026-05-28 17:26:44,096 - Epoch 45, train_loss: 0.022158116560118894, val_loss_mse: 0.023706492595374586, val_loss_l2re: 0.10156577577193578
+2026-05-28 17:28:02,855 - Epoch 46, train_loss: 0.021887259922611216, val_loss_mse: 0.02383724171668291, val_loss_l2re: 0.10089942365884781
+2026-05-28 17:29:21,751 - Epoch 47, train_loss: 0.02174841092589001, val_loss_mse: 0.02378898337483406, val_loss_l2re: 0.10097204893827438
+2026-05-28 17:30:39,888 - Epoch 48, train_loss: 0.02158817699334274, val_loss_mse: 0.023726008894542853, val_loss_l2re: 0.1008137250940005
+2026-05-28 17:31:57,807 - Epoch 49, train_loss: 0.021526733320206402, val_loss_mse: 0.02373126565168301, val_loss_l2re: 0.10083856731653214
+2026-05-28 17:31:57,863 - Number of parameters: 1741738.0
+2026-05-28 17:31:57,863 - Time elapsed: 9012.642809152603 seconds

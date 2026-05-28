@@ -35,6 +35,8 @@ parser.add_argument('--dataset', default='drivernet')
 parser.add_argument('--eval', default=False, type=bool)
 parser.add_argument('--local-rank', default=0, type=int)
 parser.add_argument('--out-dim', default=4, type=int)
+parser.add_argument('--out_path', default='train',
+                    help='directory for logs/checkpoints/predictions (e.g. "demo")')
 args = parser.parse_args()
 print(args)
 
@@ -60,8 +62,8 @@ if hosts > 1:
 torch.cuda.set_device(local_rank)
 device = torch.device("cuda", local_rank)
 
-train_dataset = AirplaneDataset(args.save_dir, train=True)
-val_dataset = AirplaneDataset(args.save_dir, train=False)
+train_dataset = AirplaneDataset(args.save_dir, split='train')
+val_dataset = AirplaneDataset(args.save_dir, split='val')
 
 train_sampler = RandomSampler(train_dataset, generator=torch.Generator().manual_seed(0))
 val_sampler = RandomSampler(val_dataset, generator=torch.Generator().manual_seed(0))
@@ -91,7 +93,7 @@ model = Model(n_hidden=256, n_layers=4, space_dim=7,
 # path = f'metrics/airplane/{args.cfd_model}/{args.dataset}/{args.fold_id}/{args.nb_epochs}_{args.weight}'
 
 # All training/eval artifacts (logs, checkpoints, json, predictions) go here.
-path = "train"
+path = args.out_path
 
 if not os.path.exists(path):
     os.makedirs(path)
@@ -112,9 +114,9 @@ if not args.eval:
     # train
     model = train.main(device, train_loader, val_loader, model, hparams, path, val_iter=args.val_iter, reg=args.weight, pos_norm=args.pos_norm, out_norm=args.out_norm, norm_norm=0, pos_mean=pos_mean, pos_std=pos_std, out_mean=out_mean, out_std=out_std, norm_mean=norm_mean, norm_std=norm_std, full=True)
 else:
-    # Offline evaluation on the test split. Samples come from the test_set manifest
-    # (val_dataset); Ma/alpha/beta and fields are read from each h5. result.csv, when
-    # present, is used only to report the reference aerodynamic coefficients alongside.
+    # Offline evaluation on the held-out test split. Ma/alpha/beta and fields are read
+    # from each h5. result.csv, when present, is used only to report the reference
+    # aerodynamic coefficients alongside.
     ckpt_file = os.path.join(path, f'model_{args.nb_epochs}.pth')
     if not os.path.exists(ckpt_file):
         raise FileNotFoundError(
@@ -125,11 +127,12 @@ else:
     res_file = os.path.join(args.save_dir, 'result.csv')
     coeff_df = pd.read_csv(res_file) if os.path.exists(res_file) else None
 
+    test_dataset = AirplaneDataset(args.save_dir, split='test')
     model = torch.load(ckpt_file, weights_only=False).cuda()
     model.eval()
     l2re = 0.0
     n_samples = 0
-    for h5_path in val_dataset.f_list:
+    for h5_path in test_dataset.f_list:
         with h5py.File(h5_path, 'r') as f:
             pos = torch.from_numpy(f['pos'][:]).view(1, -1, 3).float().cuda()
             normals = torch.from_numpy(f['normals'][:]).view(1, -1, 3).float().cuda()

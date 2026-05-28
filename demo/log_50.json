@@ -1,0 +1,12 @@
+{
+            "nb_parameters": 1741738.0,
+            "time_elapsed": 9012.642809152603,
+            "hparams": {
+                        "lr": 0.001,
+                        "batch_size": 1,
+                        "nb_epochs": 50
+            },
+            "train_loss": 0.021526733320206402,
+            "val_loss_mse": 0.02373126565168301,
+            "val_loss_l2re": 0.10083856731653214
+}

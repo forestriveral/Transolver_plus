@@ -1,0 +1,95 @@
+2026-05-28 17:34:36,185 - Namespace(data_dir='dataset/aircraft_dataset/', save_dir='dataset/aircraft_dataset/', fold_id=0, gpu=0, val_iter=10, cfd_config_dir='cfd/cfd_params.yaml', cfd_model='transolver_plus', cfd_mesh=False, r=0.2, weight=0.5, lr=0.001, batch_size=1, nb_epochs=50, preprocessed=1, finetune=0, pos_norm=1, out_norm=1, dataset='airplane', eval=True, local_rank=0, out_dim=4, out_path='demo')
+2026-05-28 17:34:36,186 - Number of parameters: 1741738
+2026-05-28 17:34:36,186 - Model(
+  (preprocess): MLP(
+    (linear_pre): Sequential(
+      (0): Linear(in_features=7, out_features=512, bias=True)
+      (1): GELU(approximate='none')
+    )
+    (linear_post): Linear(in_features=512, out_features=256, bias=True)
+    (linears): ModuleList()
+  )
+  (embedding): Linear(in_features=3, out_features=256, bias=True)
+  (blocks): ModuleList(
+    (0-2): 3 x Transolver_plus_block(
+      (ln_1): LayerNorm((256,), eps=1e-05, elementwise_affine=True, bias=True)
+      (Attn): Physics_Attention_1D_Eidetic(
+        (softmax): Softmax(dim=-1)
+        (dropout): Dropout(p=0.1, inplace=False)
+        (proj_temperature): Sequential(
+          (0): Linear(in_features=32, out_features=32, bias=True)
+          (1): GELU(approximate='none')
+          (2): Linear(in_features=32, out_features=1, bias=True)
+          (3): GELU(approximate='none')
+        )
+        (in_project_x): Linear(in_features=256, out_features=256, bias=True)
+        (in_project_slice): Linear(in_features=32, out_features=32, bias=True)
+        (to_q): Linear(in_features=32, out_features=32, bias=False)
+        (to_k): Linear(in_features=32, out_features=32, bias=False)
+        (to_v): Linear(in_features=32, out_features=32, bias=False)
+        (to_out): Sequential(
+          (0): Linear(in_features=256, out_features=256, bias=True)
+          (1): Dropout(p=0.1, inplace=False)
+        )
+      )
+      (ln_2): LayerNorm((256,), eps=1e-05, elementwise_affine=True, bias=True)
+      (mlp): MLP(
+        (linear_pre): Sequential(
+          (0): Linear(in_features=256, out_features=512, bias=True)
+          (1): GELU(approximate='none')
+        )
+        (linear_post): Linear(in_features=512, out_features=256, bias=True)
+        (linears): ModuleList()
+      )
+    )
+    (3): Transolver_plus_block(
+      (ln_1): LayerNorm((256,), eps=1e-05, elementwise_affine=True, bias=True)
+      (Attn): Physics_Attention_1D_Eidetic(
+        (softmax): Softmax(dim=-1)
+        (dropout): Dropout(p=0.1, inplace=False)
+        (proj_temperature): Sequential(
+          (0): Linear(in_features=32, out_features=32, bias=True)
+          (1): GELU(approximate='none')
+          (2): Linear(in_features=32, out_features=1, bias=True)
+          (3): GELU(approximate='none')
+        )
+        (in_project_x): Linear(in_features=256, out_features=256, bias=True)
+        (in_project_slice): Linear(in_features=32, out_features=32, bias=True)
+        (to_q): Linear(in_features=32, out_features=32, bias=False)
+        (to_k): Linear(in_features=32, out_features=32, bias=False)
+        (to_v): Linear(in_features=32, out_features=32, bias=False)
+        (to_out): Sequential(
+          (0): Linear(in_features=256, out_features=256, bias=True)
+          (1): Dropout(p=0.1, inplace=False)
+        )
+      )
+      (ln_2): LayerNorm((256,), eps=1e-05, elementwise_affine=True, bias=True)
+      (mlp): MLP(
+        (linear_pre): Sequential(
+          (0): Linear(in_features=256, out_features=512, bias=True)
+          (1): GELU(approximate='none')
+        )
+        (linear_post): Linear(in_features=512, out_features=256, bias=True)
+        (linears): ModuleList()
+      )
+      (ln_3): LayerNorm((256,), eps=1e-05, elementwise_affine=True, bias=True)
+      (mlp2): Linear(in_features=256, out_features=6, bias=True)
+    )
+  )
+)
+2026-05-28 17:34:36,909 - 91_2_0_0: pressure L2RE=0.1329 | ref CA=0.4863 CN=0.1873 Cm=-0.1579
+2026-05-28 17:34:37,107 - 91_7_0_0: pressure L2RE=0.1089 | ref CA=0.1043 CN=-0.0777 Cm=-0.0480
+2026-05-28 17:34:37,289 - 91_7_0_2: pressure L2RE=0.1097 | ref CA=0.1045 CN=-0.0784 Cm=-0.0481
+2026-05-28 17:34:37,551 - 91_7_7_0: pressure L2RE=0.1129 | ref CA=0.1133 CN=0.8492 Cm=-0.0489
+2026-05-28 17:34:37,813 - 91_7_7_2: pressure L2RE=0.1122 | ref CA=0.1135 CN=0.8474 Cm=-0.0488
+2026-05-28 17:34:38,039 - 92_2_0_0: pressure L2RE=0.1029 | ref CA=0.4756 CN=-0.0983 Cm=-0.0920
+2026-05-28 17:34:38,242 - 92_7_0_0: pressure L2RE=0.0928 | ref CA=0.0909 CN=-0.1385 Cm=-0.0318
+2026-05-28 17:34:38,440 - 92_7_0_2: pressure L2RE=0.0945 | ref CA=0.0913 CN=-0.1392 Cm=-0.0319
+2026-05-28 17:34:38,645 - 92_7_7_0: pressure L2RE=0.0881 | ref CA=0.0890 CN=0.8455 Cm=-0.0531
+2026-05-28 17:34:38,857 - 92_7_7_2: pressure L2RE=0.0895 | ref CA=0.0892 CN=0.8439 Cm=-0.0530
+2026-05-28 17:34:39,051 - 93_2_0_0: pressure L2RE=0.1163 | ref CA=1.0165 CN=0.8505 Cm=-0.3574
+2026-05-28 17:34:39,243 - 93_7_0_0: pressure L2RE=0.1092 | ref CA=0.3723 CN=0.4094 Cm=-0.1953
+2026-05-28 17:34:39,434 - 93_7_0_2: pressure L2RE=0.1099 | ref CA=0.3725 CN=0.4070 Cm=-0.1948
+2026-05-28 17:34:39,616 - 93_7_7_0: pressure L2RE=0.1025 | ref CA=0.5366 CN=1.6261 Cm=-0.3632
+2026-05-28 17:34:39,803 - 93_7_7_2: pressure L2RE=0.1044 | ref CA=0.5363 CN=1.6222 Cm=-0.3624
+2026-05-28 17:34:39,803 - Average pressure L2RE over 15 test samples: 0.105774
