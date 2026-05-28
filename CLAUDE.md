@@ -11,32 +11,51 @@ Forked from `thuml/Transolver_plus` (set as `upstream`); `origin` is the persona
 ## Key files
 
 - `models/Transolver_plus.py` — the model. `Physics_Attention_1D_Eidetic` is the core block.
-- `main_airplane.py` — entry point: arg parsing, DDP init, model construction, train/eval dispatch.
-- `train_airplane.py` — training loop (`train.main(...)`).
-- `dataset/dataset.py` — `AirplaneDataset` / `AirplaneDataLoader`, read HDF5 samples.
-- `scripts/transolver_plus.sh` — launch script (`torch.distributed.launch`).
+- `main_airplane.py` — entry point: arg parsing, optional dist init, normalization, train/eval dispatch.
+- `train_airplane.py` — training loop + validation (`train.main(...)`, `train.test(...)`).
+- `dataset/dataset.py` — `AirplaneDataset` / `AirplaneDataLoader` (HDF5) + `load_or_compute_norm_stats`.
+- `dataset/preprocess_dat_to_h5.py` — converts raw Tecplot `.dat` → `.h5`, writes the split json.
+- `scripts/transolver_plus.sh` — single-GPU launch (direct `python`, no distributed launcher).
 
-## Running
+## Running (single GPU)
 
-`bash scripts/transolver_plus.sh`. The model **always** runs under DDP: `main_airplane.py`
-calls `dist.init_process_group(backend="nccl", ...)` and the attention does `dist_nn.all_reduce`,
-so it must be launched via `torch.distributed.launch` even on a single GPU.
+The AirCraft data ships as raw Tecplot `Components.i.dat`; the model consumes `.h5`. Pipeline:
 
-## Gotchas (read before running locally)
+```bash
+# 1. preprocess raw .dat -> .h5 (+ write airplane_dataset.json split). Driven by result.csv.
+python dataset/preprocess_dat_to_h5.py --ids 1 2 3 11 12 91 92 --write_split --test_ids 91 92
+# 2. train (+validate). Normalization stats auto-computed & cached to <save_dir>/norm_stats.json.
+python main_airplane.py --nb_epochs 2 --val_iter 1 --dataset airplane --cfd_model=transolver_plus \
+    --data_dir dataset/aircraft_dataset/ --save_dir dataset/aircraft_dataset/
+# 3. offline eval on the test split (needs model_<nb_epochs>.pth from step 2).
+python main_airplane.py --nb_epochs 2 --eval 1 --dataset airplane --cfd_model=transolver_plus \
+    --data_dir dataset/aircraft_dataset/ --save_dir dataset/aircraft_dataset/
+```
 
-- **Hardcoded absolute paths** that must be edited for any local run:
-  - `dataset/dataset.py:11` → `/aircraft_docker/airplane_dataset.json`
-  - `main_airplane.py` eval branch (~L105-106) → `/aircraft_data/`, `result.csv`, and `./model_200.pth`
-- **Data format mismatch**: code consumes `.h5` files (datasets `pos` / `normals` / `values`, attrs
-  `Ma` / `alpha` / `beta`). The shipped data under `dataset/aircraft_dataset/` is raw
-  `Components.i.dat`. There is **no `.dat → .h5` preprocessing script in the repo** — it is a known gap.
-- `--eval` uses argparse `type=bool`, so any non-empty string is truthy (the script passes `--eval 1`).
-- Large data is gitignored: `dataset/aircraft_dataset.zip` (~2.5GB) and `dataset/aircraft_dataset/`.
+Single GPU skips the process group entirely (`WORLD_SIZE` defaults to 1); compute stays on GPU.
+Multi-GPU: launch with `torchrun` and `WORLD_SIZE>1` (auto-selects nccl on Linux, gloo elsewhere).
+
+## Migrating to a new dataset
+
+The pipeline is dataset-agnostic: provide raw folders `<id>/Mach<MM.MM>_Alpha<AA.AA>_Beta<BB.BB>/Components.i.dat`
+plus a `result.csv` (cols `idx,Ma,alpha,beta,...`) under `--raw_dir`, then rerun the 3 steps above.
+Normalization is recomputed automatically (delete `norm_stats.json` to force a refresh).
+
+## Gotchas
+
+- **Windows / no-NCCL**: the eidetic-state `all_reduce` is guarded to only run for `world_size>1`
+  (`_is_distributed()` in `models/Transolver_plus.py`); gloo+CUDA all_reduce segfaults, so never
+  init a process group for a single GPU.
+- `--eval` uses argparse `type=bool`, so any non-empty string is truthy — omit it to train.
+- Training writes `model_<N>.pth`, `*.log`, `log_<N>.json` to the repo root (`path="./"`); all gitignored.
+- Large/derived data is gitignored: `dataset/aircraft_dataset.zip`, `dataset/aircraft_dataset/` (raw +
+  generated `.h5` + `norm_stats.json`), `output/`, `*.pth`.
+- `checkpoints/*.pt` are the paper's **standard-benchmark** weights (airfoil/darcy/elas/pipe/plas) —
+  there is no benchmark runner in this repo (AirCraft code only), so they are reference artifacts.
 
 ## Paper ↔ code mapping (for model edits)
 
 - Eidetic states = `gumbel_softmax()` (Rep-Slice, Eq. 4) + `proj_temperature` (Ada-Temp, Eq. 3),
   replacing the original Softmax slice weights.
-- Parallel framework = `dist_nn.all_reduce` on `slice_norm` and `slice_token`
-  (`Transolver_plus.py:71,73`), i.e. Algorithm 1's reduction.
+- Parallel framework = guarded `dist_nn.all_reduce` on `slice_norm` and `slice_token`, i.e. Algorithm 1.
 - Memory saving = only `x` is projected (no `f` branch), per the paper's "Further speedup".

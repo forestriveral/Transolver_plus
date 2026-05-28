@@ -1,14 +1,73 @@
 import torch
 import os
-import random
-import numpy as np
 import h5py
 import json
+
+NORM_STATS_FILE = "norm_stats.json"
+# field -> (h5 dataset key, channel slice). pos/normals are 3-ch, values is 6-ch.
+_STATS_FIELDS = {"pos": ("pos", slice(0, 3)),
+                 "norm": ("normals", slice(0, 3)),
+                 "out": ("values", slice(0, 6))}
+
+
+def _streaming_mean_std(files):
+    """Per-channel mean/std over all points in all files (single pass, low memory)."""
+    count = 0
+    sums = {k: None for k in _STATS_FIELDS}
+    sqsums = {k: None for k in _STATS_FIELDS}
+    for fp in files:
+        with h5py.File(fp, "r") as h5:
+            n = h5["pos"].shape[0]
+            for k, (key, sl) in _STATS_FIELDS.items():
+                arr = torch.from_numpy(h5[key][:, sl][:]).double()
+                s, sq = arr.sum(0), (arr * arr).sum(0)
+                sums[k] = s if sums[k] is None else sums[k] + s
+                sqsums[k] = sq if sqsums[k] is None else sqsums[k] + sq
+        count += n
+    stats = {}
+    for k in _STATS_FIELDS:
+        mean = sums[k] / count
+        var = (sqsums[k] / count) - mean * mean
+        std = var.clamp_min(0).sqrt()
+        stats[f"{k}_mean"] = mean.tolist()
+        stats[f"{k}_std"] = std.clamp_min(1e-8).tolist()
+    return stats
+
+
+def load_or_compute_norm_stats(save_dir, f_list, recompute=False):
+    """Return normalization tensors, computing them from the training h5 once and
+    caching to <save_dir>/norm_stats.json. This makes the pipeline dataset-agnostic:
+    migrating to a new dataset auto-derives the right statistics instead of relying
+    on hardcoded constants.
+
+    Returns a dict of (1,1,C) float tensors: pos_mean/std, norm_mean/std, out_mean/std.
+    """
+    stats_path = os.path.join(save_dir, NORM_STATS_FILE)
+    if recompute or not os.path.exists(stats_path):
+        stats = _streaming_mean_std(f_list)
+        with open(stats_path, "w") as f:
+            json.dump(stats, f, indent=4)
+    else:
+        with open(stats_path, "r") as f:
+            stats = json.load(f)
+    return {key: torch.tensor(val).view(1, 1, -1).float() for key, val in stats.items()}
+
 
 class AirplaneDataset(torch.utils.data.Dataset):
     def __init__(self, path, train=True, train_set=None, split_size=600000):
         self.split_size = split_size
-        filename = '/aircraft_docker/airplane_dataset.json'
+        # Resolve the split manifest: prefer one inside `path`, else the repo-root copy,
+        # else an explicit override via the AIRPLANE_JSON env var.
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        candidates = [
+            os.environ.get('AIRPLANE_JSON'),
+            os.path.join(path, 'airplane_dataset.json'),
+            os.path.join(repo_root, 'airplane_dataset.json'),
+        ]
+        filename = next((c for c in candidates if c and os.path.exists(c)), None)
+        if filename is None:
+            raise FileNotFoundError(
+                f"airplane_dataset.json not found in {path!r}, repo root, or AIRPLANE_JSON")
         with open(filename, 'r') as f:
             data = json.load(f)
         if train:

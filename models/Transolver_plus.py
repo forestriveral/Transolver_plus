@@ -3,9 +3,17 @@ import numpy as np
 import torch.nn as nn
 from timm.layers import trunc_normal_
 from einops import rearrange
+import torch.distributed as dist
 import torch.distributed.nn as dist_nn
 from torch.utils.checkpoint import checkpoint
 import torch.nn.functional as F
+
+
+def _is_distributed():
+    # all_reduce is only needed when eidetic states are split across >1 process.
+    # On a single GPU (world_size==1) it is a no-op, so we skip it; this also
+    # avoids the gloo+CUDA segfault on platforms without NCCL (e.g. Windows).
+    return dist.is_available() and dist.is_initialized() and dist.get_world_size() > 1
 
 ACTIVATION = {'gelu': nn.GELU, 'tanh': nn.Tanh, 'sigmoid': nn.Sigmoid, 'relu': nn.ReLU, 'leaky_relu': nn.LeakyReLU(0.1),
               'softplus': nn.Softplus, 'ELU': nn.ELU, 'silu': nn.SiLU}
@@ -47,8 +55,8 @@ class Physics_Attention_1D_Eidetic(nn.Module):
 
         self.in_project_x = nn.Linear(dim, inner_dim)
         self.in_project_slice = nn.Linear(dim_head, slice_num)
-        for l in [self.in_project_slice]:
-            torch.nn.init.orthogonal_(l.weight)  # use a principled initialization
+        for layer in [self.in_project_slice]:
+            torch.nn.init.orthogonal_(layer.weight)  # use a principled initialization
         self.to_q = nn.Linear(dim_head, dim_head, bias=False)
         self.to_k = nn.Linear(dim_head, dim_head, bias=False)
         self.to_v = nn.Linear(dim_head, dim_head, bias=False)
@@ -68,9 +76,11 @@ class Physics_Attention_1D_Eidetic(nn.Module):
         temperature = torch.clamp(temperature, min=0.01)
         slice_weights = gumbel_softmax(self.in_project_slice(x_mid), temperature)
         slice_norm = slice_weights.sum(2)  # B H G
-        dist_nn.all_reduce(slice_norm, op=dist_nn.ReduceOp.SUM)
+        if _is_distributed():
+            dist_nn.all_reduce(slice_norm, op=dist_nn.ReduceOp.SUM)
         slice_token = torch.einsum("bhnc,bhng->bhgc", x_mid, slice_weights).contiguous()
-        dist_nn.all_reduce(slice_token, op=dist_nn.ReduceOp.SUM)
+        if _is_distributed():
+            dist_nn.all_reduce(slice_token, op=dist_nn.ReduceOp.SUM)
         slice_token = slice_token / ((slice_norm + 1e-5)[:, :, :, None].repeat(1, 1, 1, self.dim_head))
 
         q_slice_token = self.to_q(slice_token)
@@ -219,7 +229,7 @@ class Model(nn.Module):
 
     def forward(self, data):
         x, pos, condition = data
-        fx, T = None, None
+        fx = None
         if self.unified_pos:
             new_pos = self.get_grid(pos)
             x = torch.cat((x, new_pos), dim=-1)

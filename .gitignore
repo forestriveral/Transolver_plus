@@ -8,11 +8,17 @@ __pycache__/
 *.egg-info/
 .ipynb_checkpoints/
 
-# Training / eval artifacts
+# Training / eval artifacts (all under train/: logs, checkpoints, json, predictions)
+train/
 *.pth
+*.pt
 *.log
+log_*.json
 output/
 metrics/
+
+# Reference benchmark weights (kept local, not versioned)
+checkpoints/
 
 # Environments
 .venv/
