@@ -1,0 +1,23 @@
+# Dataset (large, not versioned)
+dataset/aircraft_dataset.zip
+dataset/aircraft_dataset/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# Training / eval artifacts
+*.pth
+*.log
+output/
+metrics/
+
+# Environments
+.venv/
+.env
+
+# IDE
+.vscode/
+.idea/
